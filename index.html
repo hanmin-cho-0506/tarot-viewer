@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3B2A6B">
+  <title>타로 리딩 결과 — 관악구가족센터</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','나눔고딕',sans-serif;background:#F5F3FA;min-height:100vh;color:#1A1A2E;}
+    .hd{background:linear-gradient(135deg,#3B2A6B 0%,#5C3F9F 100%);padding:2rem 1.25rem 1.5rem;text-align:center;color:#fff;}
+    .hd-star{font-size:18px;letter-spacing:8px;opacity:.6;margin-bottom:.5rem}
+    .hd-title{font-size:22px;font-weight:700;letter-spacing:2px;margin-bottom:.25rem}
+    .hd-center{font-size:12px;opacity:.55;letter-spacing:1px}
+    .wrap{max-width:480px;margin:0 auto;padding:1.5rem 1rem 4rem}
+    .name-chip{display:inline-flex;align-items:center;gap:6px;background:#EDE8F8;color:#3B2A6B;font-size:14px;font-weight:600;padding:6px 14px;border-radius:20px;margin-bottom:1.25rem;}
+    .sec-label{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#9B8EC4;margin-bottom:.6rem;}
+    .cards{display:flex;gap:8px;margin-bottom:1.5rem}
+    .card{flex:1;background:#fff;border:1px solid #E2DBF5;border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 2px 8px rgba(59,42,107,.06);}
+    .card-pos{font-size:10px;color:#9B8EC4;margin-bottom:6px;letter-spacing:.5px}
+    .card-name{font-size:13px;font-weight:700;color:#1A1A2E;line-height:1.5;word-break:keep-all}
+    .card-dir{margin-top:6px;font-size:11px;font-weight:600}
+    .card-dir.fwd{color:#7C5CBF}
+    .card-dir.rev{color:#D85A30}
+    .reading-box{background:#fff;border:1px solid #E2DBF5;border-radius:16px;padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(59,42,107,.06);}
+    .reading-text{font-size:15px;line-height:1.9;color:#2D2D2D;white-space:pre-wrap;word-break:keep-all;}
+    .share-btn{width:100%;padding:15px;background:#3B2A6B;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 16px rgba(59,42,107,.25);transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .share-btn:active{opacity:.85}
+    .footer{text-align:center;font-size:11px;color:#B0A5CC;margin-top:2rem;line-height:1.8;}
+    .footer strong{color:#7C5CBF}
+    .error-state{text-align:center;padding:5rem 1rem;}
+    .error-icon{font-size:40px;margin-bottom:1rem}
+    .error-state h2{font-size:17px;color:#555;margin-bottom:.5rem}
+    .error-state p{font-size:13px;color:#999;line-height:1.6}
+    .loading{text-align:center;padding:5rem 1rem;color:#9B8EC4;font-size:14px;}
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A2E;color:#fff;font-size:13px;padding:10px 20px;border-radius:20px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+<div class="hd">
+  <div class="hd-star">✦ ✦ ✦</div>
+  <div class="hd-title">타로 리딩 결과</div>
+  <div class="hd-center">관악구가족센터 가족성장파트</div>
+</div>
+<div class="wrap" id="content">
+  <div class="error-state">
+    <div class="error-icon">🔮</div>
+    <h2>QR 코드를 스캔해주세요</h2>
+    <p>부스 스태프에게 QR 코드 스캔을<br>요청해주세요</p>
+  </div>
+</div>
+<div class="toast" id="toast">링크가 복사되었습니다</div>
+<script>
+var SPREADS=[
+  {name:'과거 / 현재 / 미래',pos:['과거','현재','미래']},
+  {name:'상황 / 장애물 / 조언',pos:['상황','장애물','조언']},
+  {name:'생각 / 감정 / 행동',pos:['생각','감정','행동']},
+  {name:'나 / 상대 / 관계',pos:['나','상대','관계']}
+];
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function decode(hash){try{return JSON.parse(decodeURIComponent(escape(atob(hash))));}catch(e){return null;}}
+function render(data){
+  var spread=SPREADS[data.s]||SPREADS[0];
+  var html='';
+  if(data.n){html+='<div class="name-chip">🌙 '+esc(data.n)+'님의 리딩</div>';}
+  html+='<div class="sec-label">'+esc(spread.name)+'</div>';
+  html+='<div class="cards">';
+  for(var i=0;i<3;i++){
+    var c=(data.c&&data.c[i])||{};
+    html+='<div class="card">';
+    html+='<div class="card-pos">'+esc(spread.pos[i])+'</div>';
+    html+='<div class="card-name">'+(c.k?esc(c.k):'—')+'</div>';
+    if(c.k){html+='<div class="card-dir '+(c.r?'rev':'fwd')+'">'+(c.r?'↓ 역방향':'↑ 정방향')+'</div>';}
+    html+='</div>';
+  }
+  html+='</div>';
+  if(data.t){
+    html+='<div class="reading-box">';
+    html+='<div class="sec-label" style="margin-bottom:.75rem">해석</div>';
+    html+='<div class="reading-text">'+esc(data.t)+'</div>';
+    html+='</div>';
+  }
+  html+='<button class="share-btn" onclick="share()">↑ 이 페이지 공유하기</button>';
+  html+='<div class="footer"><strong>관악구가족센터</strong> 가족성장파트<br>이 리딩 결과는 재미 목적으로 제공됩니다</div>';
+  document.getElementById('content').innerHTML=html;
+}
+function share(){
+  var url=location.href;
+  if(navigator.share){
+    navigator.share({title:'타로 리딩 결과 — 관악구가족센터',url:url}).catch(function(){});
+  }else{
+    navigator.clipboard.writeText(url).then(function(){showToast();}).catch(function(){prompt('링크를 복사하세요:',url);});
+  }
+}
+function showToast(){
+  var t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
+}
+/* 초기화 */
+var hash=location.hash.slice(1);
+if(hash){
+  if(/^r[0-9a-z]{7,12}$/.test(hash)){
+    document.getElementById('content').innerHTML='<div class="loading">리딩을 불러오는 중...</div>';
+    fetch('https://raw.githubusercontent.com/hanmin-cho-0506/tarot-viewer/main/readings/'+hash+'.json')
+      .then(function(r){if(!r.ok)throw new Error();return r.json();})
+      .then(function(d){render(d);})
+      .catch(function(){
+        document.getElementById('content').innerHTML=
+          '<div class="error-state"><div class="error-icon">😔</div><h2>리딩을 찾을 수 없습니다</h2><p>QR 코드를 다시 스캔해주세요</p></div>';
+      });
+  }else{
+    var data=decode(hash);
+    if(data)render(data);
+  }
+}
+</script>
+</body>
+</html>
